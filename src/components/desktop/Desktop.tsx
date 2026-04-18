@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { listDocuments, deleteDocument, archiveDocument } from '../../api/documents'
+import { listDocuments, deleteDocument, archiveDocument, downloadDocument } from '../../api/documents'
 import Topbar from './Topbar'
 import Dock from './Dock'
 import FileIcon from './FileIcon'
@@ -8,11 +8,12 @@ import ContextMenu from './ContextMenu'
 import TrashWindow from '../windows/TrashWindow'
 import ArchiveWindow from '../windows/ArchiveWindow'
 import PreviewWindow from '../windows/PreviewWindow'
+import ShareWindow from '../windows/ShareWindow'
 import { Upload, FolderOpen } from 'lucide-react'
 
 interface Props { username: string; onLogout: () => void }
 
-type WinType = 'trash' | 'archive' | 'notif' | 'preview'
+type WinType = 'trash' | 'archive' | 'notif' | 'preview' | 'share'
 interface OpenWindow { id: string; type: WinType; doc?: any }
 
 type ContextState = { x: number; y: number; doc: any } | null
@@ -176,8 +177,8 @@ export default function Desktop({ username, onLogout }: Props) {
             y={context.y}
             onClose={() => setContext(null)}
             onPreview={() => { openWindow('preview', context.doc); setContext(null) }}
-            onDownload={() => {}}
-            onShareLink={() => {}}
+            onDownload={() => { downloadDocument(context.doc.name); setContext(null) }}
+            onShareLink={() => { openWindow('share', context.doc); setContext(null) }}
             onShareMail={() => {}}
             onArchive={() => { archiveMut.mutate(context.doc.name); setContext(null) }}
             onDelete={() => { deleteMut.mutate(context.doc.name); setContext(null) }}
@@ -190,10 +191,13 @@ export default function Desktop({ username, onLogout }: Props) {
             <TrashWindow key={w.id} onClose={() => closeWindow(w.id)} zIndex={winZ[w.id]} onFocus={() => focusWindow(w.id)} />
           )
           if (w.type === 'archive') return (
-            <ArchiveWindow key={w.id} onClose={() => closeWindow(w.id)} zIndex={winZ[w.id]} onFocus={() => focusWindow(w.id)} />
+            <ArchiveWindow key={w.id} onClose={() => closeWindow(w.id)} onPreview={(doc) => openWindow('preview', doc)} zIndex={winZ[w.id]} onFocus={() => focusWindow(w.id)} />
           )
           if (w.type === 'preview' && w.doc) return (
             <PreviewWindow key={w.id} doc={w.doc} onClose={() => closeWindow(w.id)} zIndex={winZ[w.id]} onFocus={() => focusWindow(w.id)} />
+          )
+          if (w.type === 'share' && w.doc) return (
+            <ShareWindow key={w.id} doc={w.doc} onClose={() => closeWindow(w.id)} zIndex={winZ[w.id]} onFocus={() => focusWindow(w.id)} />
           )
           return null
         })}

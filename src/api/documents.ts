@@ -47,6 +47,21 @@ export const unarchiveDocument = async (name: string) => {
   return res.data
 }
 
+export const downloadDocument = async (name: string): Promise<void> => {
+  const res = await api.get(`/file/${name}/download`, { responseType: 'blob' })
+  const url = URL.createObjectURL(res.data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = name
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+export const shareLink = async (name: string, visits: number, shareTo: string[]) => {
+  const res = await api.post(`/share-link/${name}`, { visits, share_to: shareTo })
+  return res.data as { personal_url: string; share_this: string }
+}
+
 export const previewDocument = async (name: string): Promise<string> => {
   const res = await api.get(`/preview/${name}`, { responseType: 'blob' })
   return URL.createObjectURL(res.data)
